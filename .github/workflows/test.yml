@@ -1,0 +1,79 @@
+name: test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # dbstick is pure Go with no OS-specific code, so one OS is enough.
+  # Each nested module has a go.mod of its own, so each step runs in all.
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # id-token: write lets the Codecov upload authenticate as this run,
+    # with no stored token. A job's permissions replace the workflow's, so
+    # contents: read is restated.
+    permissions:
+      contents: read
+      id-token: write
+    # pgxstick's tests run against this server.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      MODULES: . redisstore pgxstick sqlstick gormstick e2e
+      DBSTICK_POSTGRES_URL: postgres://postgres:pass@localhost:5432/postgres?sslmode=disable
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - uses: jdx/mise-action@v4
+
+      - name: Vet
+        run: for m in $MODULES; do (cd "$m" && go vet ./...); done
+
+      - name: Test with coverage and the race detector
+        run: |
+          for m in $MODULES; do
+            (cd "$m" && go test -race -count=1 -covermode=atomic -coverprofile=coverage.txt ./...)
+          done
+
+      # Codecov being unreachable is no reason to fail the run.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.txt,./redisstore/coverage.txt,./pgxstick/coverage.txt,./sqlstick/coverage.txt,./gormstick/coverage.txt
+          use_oidc: true
+        continue-on-error: true
+
+      - name: Lint
+        run: |
+          for m in $MODULES; do
+            (
+              cd "$m"
+              mise exec -- golangci-lint run ./...
+              mise exec -- declscope shrink ./...
+              mise exec -- declscope ./...
+            )
+          done

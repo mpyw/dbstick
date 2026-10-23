@@ -1,0 +1,22 @@
+version: "2"
+
+linters:
+  default: standard
+  settings:
+    # Every error is checked, or dropped with _ = and a reason. None of the
+    # default exclusions, such as Close and fmt.Fprint*, apply.
+    errcheck:
+      check-type-assertions: true
+      disable-default-exclusions: true
+  exclusions:
+    rules:
+      # An example is the code pkg.go.dev shows. Its fmt.Println prints the
+      # Output that go test checks, and "_, _ =" would be noise there. Each
+      # method's examples are in its own _test.go.
+      - path: _test\.go
+        linters: [errcheck]
+        text: fmt\.Println
+
+formatters:
+  enable:
+    - gofmt

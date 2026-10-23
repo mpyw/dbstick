@@ -1,0 +1,19 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 1
+  round: down
+  status:
+    # The whole may not get worse, by any amount.
+    project:
+      default:
+        target: auto
+        threshold: 0%
+    # New and changed lines must be tested.
+    patch:
+      default:
+        target: 100%
+
+comment:
+  require_changes: true

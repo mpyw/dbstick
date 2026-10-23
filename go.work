@@ -1,0 +1,10 @@
+go 1.26.0
+
+use (
+	.
+	./e2e
+	./gormstick
+	./pgxstick
+	./redisstore
+	./sqlstick
+)
