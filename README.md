@@ -1,4 +1,16 @@
+<div align="center">
+
+<img src=".github/assets/icon.png" width="200" alt="A Go gopher spearing a database labeled Primary, beside one labeled Replica">
+
 # dbstick
+
+Read your own writes with a replica database, even on the next request.
+
+[![Test](https://github.com/mpyw/dbstick/actions/workflows/test.yml/badge.svg)](https://github.com/mpyw/dbstick/actions/workflows/test.yml)
+[![Coverage](https://codecov.io/gh/mpyw/dbstick/graph/badge.svg)](https://codecov.io/gh/mpyw/dbstick)
+[![Go Reference](https://pkg.go.dev/badge/github.com/mpyw/dbstick.svg)](https://pkg.go.dev/github.com/mpyw/dbstick)
+
+</div>
 
 A user submits a form and is redirected to the result. The read runs on a replica that has not caught up yet, so the user sees the old data.
 
